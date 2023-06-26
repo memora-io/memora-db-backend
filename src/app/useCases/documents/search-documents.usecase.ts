@@ -20,7 +20,6 @@ interface ISearchDocumentsResponse {
     id: string,
     content: string,
     metadata?: Record<string, unknown>
-    score: number
   }[]
 }
 
@@ -62,7 +61,6 @@ export class SearchDocumentsUseCase {
           id: doc.id,
           content: qdrantDoc.content,
           metadata: qdrantDoc.metadata,
-          score: qdrantDoc.score
         }
       })
     }

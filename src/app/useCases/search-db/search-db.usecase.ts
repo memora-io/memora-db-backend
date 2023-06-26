@@ -18,7 +18,6 @@ interface ISearchDbResponse {
     id: string,
     content: string,
     metadata?: Record<string, unknown>
-    score: number
   }[]
 }
 
@@ -45,8 +44,7 @@ export class SearchDbUseCase {
       documents: topQdrantDocuments.map(doc => ({
         id: doc.id as string,
         content: doc.content,
-        metadata: doc.metadata,
-        score: doc.score
+        metadata: doc.metadata
       }))
     }
 
