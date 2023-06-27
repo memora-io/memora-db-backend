@@ -1,9 +1,9 @@
 import { EmbeddingClient } from "@/infra/clients/embedding.client";
-import { DbClient } from "../../../infra/clients/db.client";
-import { QdrantClient } from "../../../infra/clients/qdrant.client";
 import { AppError } from "@/app/errors/app.error";
 import { RerankingClient } from "@/infra/clients/reranking.client";
 import { ServerError } from "@/app/errors/server.error";
+import { DbClient } from "@/infra/clients/db.client";
+import { QdrantClient } from "@/infra/clients/qdrant.client";
 
 interface ISearchDocumentsData {
   userId: string;
