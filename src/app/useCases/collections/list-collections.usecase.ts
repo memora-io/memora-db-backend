@@ -1,5 +1,5 @@
 import { AppError } from "@/app/errors/app.error";
-import { DbClient } from "../../../infra/clients/db.client";
+import { DbClient } from "@/infra/clients/db.client";
 
 interface IListCollectionsData {
   userId: string;

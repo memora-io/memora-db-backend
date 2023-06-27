@@ -22,6 +22,7 @@ export class QdrantClient {
   constructor() {
     this.client = new QdrantClientFromLib({ url: environment.QDRANT_API_URL })
   }
+
   async createCollection(collectionId: string) {
     const callName = `${this.constructor.name}-${this.createCollection.name}`
     console.log(`${callName} - input`, { collectionId })
@@ -106,6 +107,31 @@ export class QdrantClient {
       metadata: point.payload.metadata
     }))
 
+    console.log(`${callName} - output`, output)
+    return output
+  }
+
+  async getDocument(collectionId: string, documentId: string) {
+    const callName = `${this.constructor.name}-${this.getDocument.name}`
+    console.log(`${callName} - input`, {
+      collectionId,
+      documentId
+    })
+
+    const data = await this.client.retrieve(collectionId, {
+      ids: [documentId],
+      with_payload: true,
+    })
+    if(!data[0]) {
+      console.log(`${callName} - output`)
+      return
+    }
+
+    const output = {
+      id: data[0].id,
+      content: data[0].payload?.content,
+      metadata: data[0].payload?.metadata
+    }
     console.log(`${callName} - output`, output)
     return output
   }

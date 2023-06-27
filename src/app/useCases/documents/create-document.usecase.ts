@@ -25,7 +25,7 @@ export class CreateDocumentUseCase {
     let collection = await this.dbClient.findCollection(data.collectionName, data.userId)
     if (!collection) {
       collection = await this.createCollectionUseCase.execute({
-        collectionName: data.collectionName,
+        name: data.collectionName,
         userId: data.userId
       })
     }
@@ -43,6 +43,7 @@ export class CreateDocumentUseCase {
     const callName = `${this.constructor.name}-${this.createDocument.name}`
     console.log(`${callName} - input`, data)
 
+    
     await this.qdrantClient.createDocument(data.collectionId, {
       content: data.content,
       metadata: data.metadata,

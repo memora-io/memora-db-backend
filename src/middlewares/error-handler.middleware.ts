@@ -13,7 +13,7 @@ export function errorHandlerMiddleware(err: IError, _req: Request, res: Response
   if(err instanceof ZodError) {
     return res.status(400).json({
       message: `validation error`,
-      issues: err.issues
+      issues: err.issues,
     })
   }
   if (err instanceof ServerError) {

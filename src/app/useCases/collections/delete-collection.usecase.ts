@@ -5,14 +5,14 @@ import { ServerError } from "../../errors/server.error";
 
 interface IDeleteCollectionData {
   userId: string;
-  collectionName: string;
+  name: string;
 }
 
 export class DeleteCollectionUseCase {
   constructor(private qdrantClient: QdrantClient, private dbClient: DbClient) {}
 
   async execute(data: IDeleteCollectionData) {
-    const collection = await this.dbClient.findCollection(data.collectionName, data.userId)
+    const collection = await this.dbClient.findCollection(data.name, data.userId)
     if(!collection) throw new AppError('Collection does not exist', 404)
     await this.deleteCollectionTransaction(collection)
   }

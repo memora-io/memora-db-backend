@@ -94,4 +94,28 @@ export class DbClient {
     console.log(`${callName} - output`, output)
     return output
   }
+
+  // async incrementDocumentsOnCollection(collection_id: string): Promise<void> {
+  //   const callName = `${this.constructor.name}-${this.incrementDocumentsOnCollection.name}`
+  //   console.log(`${callName} - input`, { collection_id })
+
+  //   await this.client.updateTable('collections').set({
+
+  //   })
+
+  //   if (!collections) {
+  //     console.log(`${callName} - output`, null)
+  //     return null
+  //   }
+  //   const output = collections.map(collection =>
+  //   ({
+  //     id: collection.id,
+  //     collection_name: collection.name,
+  //     owner_id: collection.owner_id
+  //   })
+  //   )
+
+  //   console.log(`${callName} - output`, output)
+  //   return output
+  // }
 }

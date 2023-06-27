@@ -1,11 +1,12 @@
+import { AppError } from "@/app/errors/app.error";
+import { DbClient, IDbCollection } from "@/infra/clients/db.client";
+import { QdrantClient } from "@/infra/clients/qdrant.client";
 import { randomUUID } from "crypto";
-import { DbClient, IDbCollection } from "../../../infra/clients/db.client";
-import { QdrantClient } from "../../../infra/clients/qdrant.client";
-import { AppError } from "../../errors/app.error";
+
 
 interface ICreateCollectionData {
   userId: string;
-  collectionName: string;
+  name: string;
 }
 
 export class CreateCollectionUseCase {
@@ -17,7 +18,7 @@ export class CreateCollectionUseCase {
 
     const collectionToCreate: IDbCollection = {
       owner_id: data.userId,
-      collection_name: data.collectionName,
+      collection_name: data.name,
       id: randomUUID()
     }
     const collectionAlreadyExists = await this.checkCollectionAlreadyExists(collectionToCreate.collection_name, collectionToCreate.owner_id)
