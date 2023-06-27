@@ -22,7 +22,7 @@ export class ListDocumentsUseCase {
     const collection = await this.dbClient.findCollection(data.collectionName, data.userId)
     if(!collection) throw new AppError('collection does not exists', 404);
 
-    const documents = this.qdrantClient.listDocuments(collection.id, {
+    const documents = await this.qdrantClient.listDocuments(collection.id, {
       limit: options.limit,
       offset: options.offset
     })

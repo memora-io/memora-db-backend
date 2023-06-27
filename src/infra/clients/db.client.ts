@@ -1,7 +1,7 @@
 import { Kysely } from 'kysely'
 import { LibsqlDialect } from '@libsql/kysely-libsql'
-import Database from '@/types/db/database'
-import CollectionsTable from '@/types/db/collections';
+import Database from '@/@types/db/database'
+import CollectionsTable from '@/@types/db/collections';
 
 export interface IDbCollection {
   id: string;

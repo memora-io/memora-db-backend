@@ -1,0 +1,18 @@
+version: '3.3'
+
+services:
+  nodejs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: nodejs
+    container_name: nodejs
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - QDRANT_API_URL=$QDRANT_API_URL
+      - PORT=$PORT
+      - LIBSQL_DB_URL=$LIBSQL_DB_URL
+      - LIBSQL_DB_AUTH_TOKEN=$LIBSQL_DB_AUTH_TOKEN
+    ports:
+      - "3000:3000"

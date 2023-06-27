@@ -18,7 +18,8 @@ export class GetDocumentUseCase {
     const collection = await this.dbClient.findCollection(data.collectionName, data.userId)
     if(!collection) throw new AppError('collection does not exists', 404);
 
-    const documents = this.qdrantClient.getDocument(collection.id, data.documentId)
-    return documents
+    const document = await this.qdrantClient.getDocument(collection.id, data.documentId)
+    if(!document) throw new AppError('document not found', 404)
+    return document
   }
 }

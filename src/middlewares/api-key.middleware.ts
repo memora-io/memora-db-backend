@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from "express";
+import { NextFunction, Response } from "express";
 import { IRequest } from "types";
 
 export function apiKeyMiddleware(req: IRequest, _res: Response, next: NextFunction) {
