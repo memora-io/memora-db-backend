@@ -1,12 +1,12 @@
 version: '3.3'
 
 services:
-  nodejs:
+  memora-backend:
     build:
       context: .
       dockerfile: Dockerfile
     image: nodejs
-    container_name: nodejs
+    container_name: memora-backend
     restart: unless-stopped
     env_file: .env
     environment:
