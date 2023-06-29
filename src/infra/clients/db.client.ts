@@ -2,6 +2,7 @@ import { Kysely } from 'kysely'
 import { LibsqlDialect } from '@libsql/kysely-libsql'
 import Database from '@/@types/db/database'
 import CollectionsTable from '@/@types/db/collections';
+import { environment } from '@/config/environment';
 
 export interface IDbCollection {
   id: string;
@@ -14,8 +15,8 @@ export class DbClient {
   constructor() {
     this.client = new Kysely<Database>({
       dialect: new LibsqlDialect({
-        url: process.env.LIBSQL_DB_URL,
-        authToken: process.env.LIBSQL_DB_AUTH_TOKEN
+        url: environment.LIBSQL_DB_URL,
+        authToken: environment.LIBSQL_DB_AUTH_TOKEN
       })
     })
   }
