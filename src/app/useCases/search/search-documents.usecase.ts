@@ -37,14 +37,23 @@ export class SearchDocumentsUseCase {
     const callName = `${this.constructor.name}-${this.execute.name}`;
     console.log(`${callName} - input`, data);
 
+    console.time('getCollectionTurso')
     const collection = await this.dbClient.findCollection(data.collectionName, data.userId);
     if (!collection) throw new AppError('collection does not exists', 404);
+    console.timeEnd('getCollectionTurso')
 
+    console.time('generateEmbedding')
     const queryVector = await this.embeddingClient.createEmbedding(String(data.query));
+    console.timeEnd('generateEmbedding')
+
+    console.time('getDocumentsDB')
     const topQdrantDocuments = await this.qdrantClient.searchDocuments(collection.id, queryVector, {
       limit: QDRANT_DOCUMENT_LIMIT,
       offset: 0
     })
+    console.timeEnd('getDocumentsDB')
+
+    console.time('reranking')
     const refinedResponse = await this.rerankingClient.rerank(
       data.query,
       topQdrantDocuments,
@@ -52,6 +61,7 @@ export class SearchDocumentsUseCase {
         limit: options.limit
       }
     )
+    console.timeEnd('reranking')
 
     const response: ISearchDocumentsResponse = {
       documents: refinedResponse.map(doc => {
