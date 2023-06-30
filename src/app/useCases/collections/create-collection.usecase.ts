@@ -12,7 +12,7 @@ interface ICreateCollectionData {
 export class CreateCollectionUseCase {
   constructor(private qdrantClient: QdrantClient, private dbClient: DbClient) { }
 
-  async execute(data: ICreateCollectionData) {
+  async execute(data: ICreateCollectionData): Promise<IDbCollection> {
     const callName = `${this.constructor.name}-${this.execute.name}`
     console.log(`${callName} - input`, data)
 
@@ -20,10 +20,6 @@ export class CreateCollectionUseCase {
       owner_id: data.userId,
       collection_name: data.name,
       id: randomUUID()
-    }
-    const collectionAlreadyExists = await this.checkCollectionAlreadyExists(collectionToCreate.collection_name, collectionToCreate.owner_id)
-    if (collectionAlreadyExists) {
-      throw new AppError(`collection already exists`, 400)
     }
     const dbCollection = await this.createCollectionTransaction(collectionToCreate)
     return dbCollection
@@ -36,20 +32,30 @@ export class CreateCollectionUseCase {
     return this.dbClient.findCollection(collectionName, ownerId)
   }
 
-  async createCollectionTransaction(collectionToCreate: IDbCollection) {
+  async createCollectionTransaction(collectionToCreate: IDbCollection): Promise<IDbCollection> {
     const callName = `${this.constructor.name}-${this.createCollectionTransaction.name}`
     console.log(`${callName} - input`, collectionToCreate)
     
-    await this.qdrantClient.createCollection(collectionToCreate.id)
-    console.log(`${callName} - collection created on qdrant`)
+    let dbCollection 
     try {
       console.log(`${callName} - creating collection on db`)
-      const dbCollection = await this.dbClient.createCollection(collectionToCreate)
+      dbCollection = await this.dbClient.createCollection(collectionToCreate)
       console.log(`${callName} - collection created on db`)
+    } catch (err: any) {
+      const collectionAlreadyExistsErr = (err.code === 'SQLITE_CONSTRAINT')
+      if(collectionAlreadyExistsErr) throw new AppError(`collection already exists`, 400)
+      console.error('unknown error on db create collection')
+      throw err
+    }
+
+    try {
+      console.log(`${callName} - creating collection on qdrant`)
+      await this.qdrantClient.createCollection(collectionToCreate.id)
+      console.log(`${callName} - collection created on qdrant`)
       return dbCollection
     } catch (err) {
       console.error(`${callName} - error while creating collection, reverting operation`)
-      await this.qdrantClient.deleteCollection(collectionToCreate.id)
+      await this.dbClient.deleteCollection(collectionToCreate.id)
       console.log(`${callName} - collection deleted, operation reverted`)
 
       throw err

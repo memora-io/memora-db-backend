@@ -1,8 +1,9 @@
 import { Kysely } from 'kysely'
 import { LibsqlDialect } from '@libsql/kysely-libsql'
-import Database from '@/@types/db/database'
-import CollectionsTable from '@/@types/db/collections';
+import Database from '@/types/db/database'
+import CollectionsTable from '@/types/db/collections';
 import { environment } from '@/config/environment';
+import { randomUUID } from 'crypto';
 
 export interface IDbCollection {
   id: string;
@@ -23,13 +24,16 @@ export class DbClient {
 
   async createCollection(collectionData: IDbCollection): Promise<IDbCollection> {
     const callName = `${this.constructor.name}-${this.createCollection.name}`
+    const reqId = randomUUID();
     console.log(`${callName} - input`, collectionData)
 
-    const data = await this.client.insertInto('collections').values({
+    console.time(`time-${callName}-${reqId}`)
+    await this.client.insertInto('collections').values({
       id: collectionData.id,
       name: collectionData.collection_name,
       owner_id: collectionData.owner_id
-    }).executeTakeFirst()
+    }).execute()
+    console.timeEnd(`time-${callName}-${reqId}`)
 
     const output = {
       id: collectionData.id,
@@ -52,12 +56,16 @@ export class DbClient {
   async findCollection(collectionName: string, ownerId: string): Promise<IDbCollection | null> {
     const callName = `${this.constructor.name}-${this.findCollection.name}`
     console.log(`${callName} - input`, { collectionName, ownerId })
+    const reqId = randomUUID();
+    console.time(`time-${callName}-${reqId}`)
 
-    const collection: CollectionsTable | null = await this.client.selectFrom('collections')
+    const collections = await this.client.selectFrom('collections')
       .selectAll()
       .where('collections.name', '=', collectionName)
       .where('collections.owner_id', '=', ownerId)
-      .executeTakeFirst() as CollectionsTable
+      .limit(1)
+      .execute()
+    const collection = collections[0]
     if (!collection) {
       console.log(`${callName} - output`, null)
       return null
@@ -67,6 +75,7 @@ export class DbClient {
       collection_name: collection.name,
       owner_id: collection.owner_id
     }
+    console.timeEnd(`time-${callName}-${reqId}`)
 
     console.log(`${callName} - output`, output)
     return output

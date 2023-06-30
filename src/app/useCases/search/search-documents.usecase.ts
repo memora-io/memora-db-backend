@@ -32,28 +32,28 @@ export class SearchDocumentsUseCase {
   ) { }
 
   async execute(data: ISearchDocumentsData, options: ISearchDocumentsOptions) {
-    const QDRANT_DOCUMENT_LIMIT = 100;
+    const QDRANT_DOCUMENT_LIMIT = 80;
 
     const callName = `${this.constructor.name}-${this.execute.name}`;
     console.log(`${callName} - input`, data);
 
-    console.time('getCollectionTurso')
+    console.time('time-getCollectionTurso')
     const collection = await this.dbClient.findCollection(data.collectionName, data.userId);
     if (!collection) throw new AppError('collection does not exists', 404);
-    console.timeEnd('getCollectionTurso')
+    console.timeEnd('time-getCollectionTurso')
 
-    console.time('generateEmbedding')
+    console.time('time-generateEmbedding')
     const queryVector = await this.embeddingClient.createEmbedding(String(data.query));
-    console.timeEnd('generateEmbedding')
+    console.timeEnd('time-generateEmbedding')
 
-    console.time('getDocumentsDB')
+    console.time('time-getDocumentsDB')
     const topQdrantDocuments = await this.qdrantClient.searchDocuments(collection.id, queryVector, {
       limit: QDRANT_DOCUMENT_LIMIT,
       offset: 0
     })
-    console.timeEnd('getDocumentsDB')
+    console.timeEnd('time-getDocumentsDB')
 
-    console.time('reranking')
+    console.time('time-reranking')
     const refinedResponse = await this.rerankingClient.rerank(
       data.query,
       topQdrantDocuments,
@@ -61,7 +61,7 @@ export class SearchDocumentsUseCase {
         limit: options.limit
       }
     )
-    console.timeEnd('reranking')
+    console.timeEnd('time-reranking')
 
     const response: ISearchDocumentsResponse = {
       documents: refinedResponse.map(doc => {

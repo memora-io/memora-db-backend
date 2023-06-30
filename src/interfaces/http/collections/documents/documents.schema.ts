@@ -4,7 +4,7 @@ export class DocumentsSchema {
   createDocument = {
     body: z.object({
       content: z.string().nonempty(),
-      metadata: z.object({}).nonstrict().required(),
+      metadata: z.object({}).optional(),
     })
   }
 

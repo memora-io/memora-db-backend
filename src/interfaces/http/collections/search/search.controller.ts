@@ -15,7 +15,7 @@ export class SearchController {
   async searchDocuments(req: IRequest, res: Response, next: NextFunction) {
     try {
       console.log('timing search documents')
-      console.time('searchDocumentsTotal')
+      console.time('time-searchDocumentsTotal')
       const query = this.schema.searchDocuments.query.parse(req.query);
       const body = this.schema.searchDocuments.body.parse(req.body);
       const documents = await this.searchDocumentsUseCase.execute({
@@ -25,7 +25,7 @@ export class SearchController {
       }, {
         limit: query.limit
       });
-      console.timeEnd('searchDocumentsTotal')
+      console.timeEnd('time-searchDocumentsTotal')
       return res.status(200).json(documents)
     } catch (err) {
       next(err);
@@ -36,7 +36,7 @@ export class SearchController {
     // internal route
     try {
       console.log('timing search documents direct on db')
-      console.time('searchDocuments-directOnDB')
+      console.time('time-searchDocuments-directOnDB')
       const query = this.schema.searchDocuments.query.parse(req.query);
       const body = this.schema.searchDocuments.body.parse(req.body);
       if (req.userId !== 'memora') throw new AppError('Forbidden', 403)
@@ -47,7 +47,7 @@ export class SearchController {
       }, {
         limit: query.limit
       });
-      console.timeEnd('searchDocuments-directOnDB')
+      console.timeEnd('time-searchDocuments-directOnDB')
       return res.status(200).json(documents)
     } catch (err) {
       next(err);

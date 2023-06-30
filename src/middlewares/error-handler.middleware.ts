@@ -5,7 +5,13 @@ import { ZodError } from "zod";
 
 type IError = ServerError | AppError | Error
 export function errorHandlerMiddleware(err: IError, _req: Request, res: Response, _next: NextFunction) {
+
   if (err instanceof AppError) {
+    let myError = {
+      ...err,
+      custom: 'app-error'
+    }
+    console.log(myError)
     return res.status(err.statusCode).json({
       message: err.message
     })
@@ -17,12 +23,20 @@ export function errorHandlerMiddleware(err: IError, _req: Request, res: Response
     })
   }
   if (err instanceof ServerError) {
-    console.error(err)
+    let myError = {
+      ...err,
+      custom: 'error-01'
+    }
+    console.error(myError)
     return res.status(err.statusCode).json({
       message: 'Server error, please contact support!'
     })
   }
-  console.error(err)
+  let myError = {
+    ...err,
+    custom: 'error-01'
+  }
+  console.error(myError)
   return res.status(500).json({
     message: 'Server error, please contact support!'
   })
