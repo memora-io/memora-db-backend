@@ -19,14 +19,14 @@ export class DocumentsController {
     try {
       console.time(`time-${req.traceId}-createDocument-totalTime`)
       const body = this.schema.createDocument.body.parse(req.body);
-      await this.createDocumentUseCase.execute({
+      const documentId = await this.createDocumentUseCase.execute({
         collectionName: req.pathParams?.collection_name as string,
         metadata: body.metadata,
         content: body.content,
         userId: req.userId as string
       }, req.traceId);
       console.timeEnd(`time-${req.traceId}-createDocument-totalTime`)
-      return res.status(201).send();
+      return res.status(201).json({ id: documentId });
     } catch (err) {
       next(err);
     }

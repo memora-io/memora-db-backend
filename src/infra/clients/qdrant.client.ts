@@ -1,8 +1,8 @@
 import { QdrantClient as QdrantClientFromLib } from '@qdrant/js-client-rest';
 import { environment } from '../../config/environment';
-import { randomUUID } from "crypto";
 
 interface ICreateDocumentQdrant {
+  id: string,
   metadata?: Record<string, any>;
   vector: number[];
   content: string;
@@ -55,7 +55,7 @@ export class QdrantClient {
     await this.client.upsert(collectionId, {
       points: [
         {
-          id: randomUUID(),
+          id: document.id,
           payload: {
             content: document.content,
             metadata: document.metadata

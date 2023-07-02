@@ -2,8 +2,8 @@ import { EmbeddingClient } from "@/infra/clients/embedding.client";
 import { DbClient } from "../../../infra/clients/db.client";
 import { QdrantClient } from "../../../infra/clients/qdrant.client";
 import { CreateCollectionUseCase } from "../collections/create-collection.usecase";
-import { AppError } from "@/app/errors/app.error";
 import { ServerError } from "@/app/errors/server.error";
+import { randomUUID } from "crypto";
 
 interface ICreateDocumentData {
   userId: string;
@@ -20,7 +20,7 @@ export class CreateDocumentUseCase {
     private createCollectionUseCase: CreateCollectionUseCase
   ) { }
 
-  async execute(data: ICreateDocumentData, traceId?: string) {
+  async execute(data: ICreateDocumentData, traceId?: string): Promise<string> {
     const callName = `${this.constructor.name}-${this.execute.name}`
     console.log(`${callName} - input`, data)
 
@@ -45,25 +45,30 @@ export class CreateDocumentUseCase {
     const documentEmbeddingVector = await this.embeddingClient.createEmbedding(String(data.content))
     console.timeEnd(`time-${traceId}-create-embedding-document`)
     console.time(`time-${traceId}-create-document-qdrant`)
-    await this.createDocument({
+    const documentId = await this.createDocument({
       collectionId: collection.id,
       content: data.content,
       vector: documentEmbeddingVector,
       metadata: data.metadata
     })
     console.timeEnd(`time-${traceId}-create-document-qdrant`)
+
+    return documentId
   }
 
 
   async createDocument(data: { collectionId: string, content: string, metadata?: Record<string, any>, vector: number[] }) {
     const callName = `${this.constructor.name}-${this.createDocument.name}`
     console.log(`${callName} - input`, data)
-
+    const documentId = randomUUID()
     
     await this.qdrantClient.createDocument(data.collectionId, {
+      id: documentId,
       content: data.content,
       metadata: data.metadata,
       vector: data.vector
     })
+
+    return documentId
   }
 }

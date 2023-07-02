@@ -8,8 +8,8 @@ export function errorHandlerMiddleware(err: IError, _req: Request, res: Response
 
   if (err instanceof AppError) {
     let myError = {
+      custom: 'app-error',
       ...err,
-      custom: 'app-error'
     }
     console.log(myError)
     return res.status(err.statusCode).json({
@@ -24,8 +24,8 @@ export function errorHandlerMiddleware(err: IError, _req: Request, res: Response
   }
   if (err instanceof ServerError) {
     let myError = {
+      custom: 'error-01',
       ...err,
-      custom: 'error-01'
     }
     console.error(myError)
     return res.status(err.statusCode).json({
@@ -33,8 +33,8 @@ export function errorHandlerMiddleware(err: IError, _req: Request, res: Response
     })
   }
   let myError = {
+    custom: 'error-01',
     ...err,
-    custom: 'error-01'
   }
   console.error(myError)
   return res.status(500).json({
