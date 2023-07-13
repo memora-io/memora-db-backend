@@ -1,5 +1,8 @@
-import { QdrantClient as QdrantClientFromLib } from '@qdrant/js-client-rest';
+import { QdrantClient as QdrantClientFromLib, Schemas } from '@qdrant/js-client-rest';
 import { environment } from '../../config/environment';
+import { AppError } from '@/app/errors/app.error';
+import { ServerError } from '@/app/errors/server.error';
+import { Server } from 'http';
 
 interface ICreateDocumentQdrant {
   id: string,
@@ -16,6 +19,10 @@ interface IPoint {
   }
   vector: number[]
 }
+
+
+export type IFilter = Schemas["Filter"]
+export type IFilterCondition = Schemas["Condition"]
 
 export class QdrantClient {
   private client: QdrantClientFromLib
@@ -122,7 +129,7 @@ export class QdrantClient {
       ids: [documentId],
       with_payload: true,
     })
-    if(!data[0]) {
+    if (!data[0]) {
       console.log(`${callName} - output`)
       return
     }
@@ -139,6 +146,7 @@ export class QdrantClient {
   async searchDocuments(collectionId: string, vector: number[], options: {
     limit: number,
     offset: number
+    filter?: IFilterMemora
   }) {
     const callName = `${this.constructor.name}-${this.searchDocuments.name}`
     console.log(`${callName} - input`, {
@@ -146,11 +154,12 @@ export class QdrantClient {
       vector,
       options
     })
-
+    const convertedFilter = options.filter ? convertQuery(options.filter) : null
     const data = await this.client.search(collectionId, {
       vector: vector,
       limit: options.limit,
       offset: options.offset,
+      filter: convertedFilter
     });
     const output = data.map(item => ({
       id: item.id as string,
@@ -162,4 +171,95 @@ export class QdrantClient {
     console.log(`${callName} - output`, output)
     return output
   }
+}
+
+
+type RangeOperators = '>' | '>=' | '<' | '<='
+type OtherOperators = '=' | '!=' | 'in'
+interface IFilterComponent {
+  key: string,
+  op: RangeOperators | OtherOperators,
+  value: any,
+}
+
+interface IFilterMemoraAnd {
+  and: IFilterComponent[]
+}
+
+interface IFilterMemoraOr {
+  or: IFilterComponent[]
+}
+
+type IFilterMemora = IFilterMemoraAnd | IFilterMemoraOr
+
+function convertQuery(data: IFilterMemora): IFilter | null {
+  const input = data as any
+  const keys = Object.keys(input)
+  if (keys.length > 1) throw new AppError("you can only choose one logical operator, use 'and' OR 'or' in filters")
+
+  let output: IFilter = {}
+  if (input.and) {
+    const must = input.and.map((item: IFilterComponent) => handleFilterItem(item));
+    output.must = must
+  }
+  if (input.or) {
+    const should = input.or.map((item: IFilterComponent) => handleFilterItem(item));
+    output.should = should
+  }
+
+  console.log('output filters', output)
+
+  return output
+}
+
+function handleFilterItem(item: IFilterComponent): IFilterCondition {
+  const rangeOperations = ['>', '>=', '<', '<=']
+
+  function mapRangeOperators(op: RangeOperators) {
+    const operators = {
+      '>': 'gt',
+      '>=': 'gte',
+      '<=': 'lte',
+      '<': 'lt',
+    }
+    const transformedOp = Object.entries(operators).find(item => item[0] === op)?.[1]
+    if(!transformedOp) throw new AppError('method not implemented')
+    return transformedOp
+  }
+
+  const filterComponent: any = {
+    key: `metadata.${item.key}`
+  }
+
+  if (rangeOperations.includes(item.op)) {
+    const op = item.op as RangeOperators
+    filterComponent.range = {
+      [mapRangeOperators(op)]: item.value
+    }
+    return filterComponent
+  }
+
+  if (item.op === '=') {
+    filterComponent.match = {
+      value: item.value
+    }
+    return filterComponent
+  }
+
+  if (item.op === '!=') {
+    filterComponent.match = {
+      except: item.value
+    }
+    return filterComponent
+  }
+
+  if (item.op === 'in') {
+    if(!Array.isArray(item.value)) throw new AppError(`for operator 'in', value must be an array`)
+    filterComponent.match = {
+      any: item.value,
+    }
+    return filterComponent
+  }
+  
+  throw new AppError('method not implemented', 500)
 }

@@ -12,7 +12,8 @@ interface ISearchDocumentsData {
 }
 
 interface ISearchDocumentsOptions {
-  limit: number
+  limit: number,
+  filters: any
 }
 
 interface ISearchDocumentsResponse {
@@ -48,6 +49,7 @@ export class SearchDocumentsUseCase {
 
     console.time('time-getDocumentsDB')
     const topQdrantDocuments = await this.qdrantClient.searchDocuments(collection.id, queryVector, {
+      filter: options.filters,
       limit: QDRANT_DOCUMENT_LIMIT,
       offset: 0
     })

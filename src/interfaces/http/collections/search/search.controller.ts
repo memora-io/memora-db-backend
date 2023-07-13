@@ -23,7 +23,8 @@ export class SearchController {
         userId: req.userId as string,
         query: body.query
       }, {
-        limit: query.limit
+        limit: query.limit,
+        filters: body.filters
       });
       console.timeEnd('time-searchDocumentsTotal')
       return res.status(200).json(documents)
