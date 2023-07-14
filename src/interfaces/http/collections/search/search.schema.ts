@@ -18,7 +18,7 @@ export class SearchSchema {
         z.object({
           or: z.array(this.filterComponentDefault)
         })
-      )
+      ).optional()
     }).nonstrict()
   }
 
