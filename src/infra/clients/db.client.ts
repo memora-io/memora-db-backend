@@ -1,6 +1,7 @@
 import { randomUUID } from 'crypto';
 import { PrismaClient } from '@prisma/client';
 import { logger } from '@/utils/logger';
+import prisma from '../db/prisma';
 
 export interface IDbCollection {
   id: string;
@@ -11,7 +12,7 @@ export interface IDbCollection {
 export class DbClient {
   private client: PrismaClient;
   constructor() {
-    this.client = new PrismaClient()
+    this.client = prisma
   }
 
   async createCollection(collectionData: IDbCollection): Promise<IDbCollection> {
