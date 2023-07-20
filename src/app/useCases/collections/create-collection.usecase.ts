@@ -43,9 +43,9 @@ export class CreateCollectionUseCase {
       dbCollection = await this.dbClient.createCollection(collectionToCreate)
       logger(`${callName} - collection created on db`)
     } catch (err: any) {
-      const collectionAlreadyExistsErr = (err.code === 'SQLITE_CONSTRAINT')
+      const collectionAlreadyExistsErr = (err.code === 'P2002')
       if (collectionAlreadyExistsErr) throw new AppError(`collection already exists`, 400)
-      console.error('unknown error on db create collection')
+      logger('unknown error on db create collection')
       throw err
     }
 
@@ -55,7 +55,7 @@ export class CreateCollectionUseCase {
       logger(`${callName} - collection created on qdrant`)
       return dbCollection
     } catch (err) {
-      console.error(`${callName} - error while creating collection, reverting operation`)
+      logger(`${callName} - error while creating collection, reverting operation`)
       await this.dbClient.deleteCollection(collectionToCreate.id)
       logger(`${callName} - collection deleted, operation reverted`)
 

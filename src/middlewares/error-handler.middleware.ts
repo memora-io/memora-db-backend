@@ -12,7 +12,7 @@ export function errorHandlerMiddleware(err: IError, _req: Request, res: Response
       custom: 'error-00',
       ...err,
     }
-    logger('error', myError)
+    logger('apperror', myError)
     return res.status(err.statusCode).json({
       message: err.message
     })
@@ -28,7 +28,7 @@ export function errorHandlerMiddleware(err: IError, _req: Request, res: Response
       custom: 'error-01',
       ...err,
     }
-    console.error(myError)
+    logger('error', myError)
     return res.status(err.statusCode).json({
       message: 'Server error, please contact support!'
     })
@@ -37,7 +37,7 @@ export function errorHandlerMiddleware(err: IError, _req: Request, res: Response
     custom: 'error-02',
     ...err,
   }
-  console.error(myError)
+  logger('error', myError)
   return res.status(500).json({
     message: 'Server error, please contact support!'
   })

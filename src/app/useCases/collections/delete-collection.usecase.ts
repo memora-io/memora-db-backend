@@ -26,7 +26,7 @@ export class DeleteCollectionUseCase {
     try {
       await this.qdrantClient.deleteCollection(collection.id)
     } catch (err) {
-      console.error(`${callName} - error while deleting, reverting operation`, err)
+      logger(`${callName} - error while deleting, reverting operation`, err)
       await this.dbClient.createCollection(collection)
       logger(`${callName} - collection created, operation reverted`)
 
