@@ -1,3 +1,4 @@
+import { logger } from "@/utils/logger";
 import axios, { Axios } from "axios";
 
 interface IRerankingOptions {
@@ -22,7 +23,7 @@ export class RerankingClient {
 
   async rerank(query: string, documents: IRerankingDocuments[], options: IRerankingOptions): Promise<IRerankingResponse[]> {
     const callName = `${this.constructor.name}-${this.rerank.name}`
-    console.log(`${callName} - input`, { query, documents, options })
+    logger(`${callName} - input`, { query, documents, options })
     const RERANKING_URL = 'http://35.155.247.97:3010/predict'
     const rerankingResponse = await this.client.post(RERANKING_URL, {
       query: query,
@@ -35,7 +36,7 @@ export class RerankingClient {
     const sortedData = data.sort((a, b) => b.score - a.score)
 
     const output = sortedData.slice(0, options.limit)
-    console.log(`${callName} - output`, output)
+    logger(`${callName} - output`, output)
     return output
   }
 }

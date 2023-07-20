@@ -1,9 +1,6 @@
-import { Kysely } from 'kysely'
-import { LibsqlDialect } from '@libsql/kysely-libsql'
-import Database from '@/types/db/database'
-import CollectionsTable from '@/types/db/collections';
-import { environment } from '@/config/environment';
 import { randomUUID } from 'crypto';
+import { PrismaClient } from '@prisma/client';
+import { logger } from '@/utils/logger';
 
 export interface IDbCollection {
   id: string;
@@ -12,62 +9,57 @@ export interface IDbCollection {
 }
 
 export class DbClient {
-  private client: Kysely<Database>;
+  private client: PrismaClient;
   constructor() {
-    this.client = new Kysely<Database>({
-      dialect: new LibsqlDialect({
-        url: environment.LIBSQL_DB_URL,
-        authToken: environment.LIBSQL_DB_AUTH_TOKEN
-      })
-    })
+    this.client = new PrismaClient()
   }
 
   async createCollection(collectionData: IDbCollection): Promise<IDbCollection> {
     const callName = `${this.constructor.name}-${this.createCollection.name}`
-    const reqId = randomUUID();
-    console.log(`${callName} - input`, collectionData)
+    logger(`${callName} - input`, collectionData)
 
-    console.time(`time-${callName}-${reqId}`)
-    await this.client.insertInto('collections').values({
-      id: collectionData.id,
-      name: collectionData.collection_name,
-      owner_id: collectionData.owner_id
-    }).execute()
-    console.timeEnd(`time-${callName}-${reqId}`)
+    await this.client.collections.create({
+      data: {
+        id: collectionData.id,
+        name: collectionData.collection_name,
+        owner_id: collectionData.owner_id,
+        total_docs: 0
+      }
+    })
 
     const output = {
       id: collectionData.id,
       collection_name: collectionData.collection_name,
       owner_id: collectionData.owner_id
     }
-    console.log(`${callName} - output`, output)
+    logger(`${callName} - output`, output)
     return output
   }
 
   async deleteCollection(collectionId: string) {
     const callName = `${this.constructor.name}-${this.deleteCollection.name}`
-    console.log(`${callName} - input`, collectionId)
+    logger(`${callName} - input`, collectionId)
 
-    await this.client.deleteFrom('collections')
-      .where('collections.id', '=', collectionId)
-      .execute()
+    await this.client.collections.delete({
+      where: {
+        id: collectionId
+      }
+    })
   }
 
   async findCollection(collectionName: string, ownerId: string): Promise<IDbCollection | null> {
     const callName = `${this.constructor.name}-${this.findCollection.name}`
-    console.log(`${callName} - input`, { collectionName, ownerId })
+    logger(`${callName} - input`, { collectionName, ownerId })
     const reqId = randomUUID();
-    console.time(`time-${callName}-${reqId}`)
 
-    const collections = await this.client.selectFrom('collections')
-      .selectAll()
-      .where('collections.name', '=', collectionName)
-      .where('collections.owner_id', '=', ownerId)
-      .limit(1)
-      .execute()
-    const collection = collections[0]
+    const collection = await this.client.collections.findFirst({
+      where: {
+        name: collectionName,
+        owner_id: ownerId
+      }
+    })
     if (!collection) {
-      console.log(`${callName} - output`, null)
+      logger(`${callName} - output`, null)
       return null
     }
     const output = {
@@ -75,22 +67,23 @@ export class DbClient {
       collection_name: collection.name,
       owner_id: collection.owner_id
     }
-    console.timeEnd(`time-${callName}-${reqId}`)
 
-    console.log(`${callName} - output`, output)
+    logger(`${callName} - output`, output)
     return output
   }
 
   async listCollections(ownerId: string): Promise<IDbCollection[] | null> {
     const callName = `${this.constructor.name}-${this.findCollection.name}`
-    console.log(`${callName} - input`, { ownerId })
+    logger(`${callName} - input`, { ownerId })
 
-    const collections: CollectionsTable[] | null = await this.client.selectFrom('collections')
-      .selectAll()
-      .where('collections.owner_id', '=', ownerId)
-      .execute() as CollectionsTable[]
+    const collections = await this.client.collections.findMany({
+      where: {
+        owner_id: ownerId
+      }
+    })
+
     if (!collections) {
-      console.log(`${callName} - output`, null)
+      logger(`${callName} - output`, null)
       return null
     }
     const output = collections.map(collection =>
@@ -101,31 +94,37 @@ export class DbClient {
     })
     )
 
-    console.log(`${callName} - output`, output)
+    logger(`${callName} - output`, output)
     return output
   }
 
-  // async incrementDocumentsOnCollection(collection_id: string): Promise<void> {
-  //   const callName = `${this.constructor.name}-${this.incrementDocumentsOnCollection.name}`
-  //   console.log(`${callName} - input`, { collection_id })
+  async incrementDocumentsOnCollection(collection_id: string): Promise<void> {
+    const callName = `${this.constructor.name}-${this.incrementDocumentsOnCollection.name}`
+    logger(`${callName} - input`, { collection_id })
+    await this.client.collections.update({
+      where: {
+        id: collection_id
+      },
+      data: {
+        total_docs: {
+          increment: 1
+        }
+      }
+    })
+  }
 
-  //   await this.client.updateTable('collections').set({
-
-  //   })
-
-  //   if (!collections) {
-  //     console.log(`${callName} - output`, null)
-  //     return null
-  //   }
-  //   const output = collections.map(collection =>
-  //   ({
-  //     id: collection.id,
-  //     collection_name: collection.name,
-  //     owner_id: collection.owner_id
-  //   })
-  //   )
-
-  //   console.log(`${callName} - output`, output)
-  //   return output
-  // }
+  async decrementDocumentsOnCollection(collection_id: string): Promise<void> {
+    const callName = `${this.constructor.name}-${this.decrementDocumentsOnCollection.name}`
+    logger(`${callName} - input`, { collection_id })
+    await this.client.collections.update({
+      where: {
+        id: collection_id
+      },
+      data: {
+        total_docs: {
+          decrement: 1
+        }
+      }
+    })
+  }
 }

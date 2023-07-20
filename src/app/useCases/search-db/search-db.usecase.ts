@@ -2,6 +2,7 @@ import { EmbeddingClient } from "@/infra/clients/embedding.client";
 import { DbClient } from "../../../infra/clients/db.client";
 import { QdrantClient } from "../../../infra/clients/qdrant.client";
 import { AppError } from "@/app/errors/app.error";
+import { logger } from "@/utils/logger";
 
 interface ISearchDbData {
   userId: string;
@@ -30,7 +31,7 @@ export class SearchDbUseCase {
 
   async execute(data: ISearchDbData, options: ISearchDbOptions) {
     const callName = `${this.constructor.name}-${this.execute.name}`;
-    console.log(`${callName} - input`, data);
+    logger(`${callName} - input`, data);
 
     const collection = await this.dbClient.findCollection(data.collectionName, data.userId);
     if (!collection) throw new AppError('collection does not exists', 404);
@@ -48,7 +49,7 @@ export class SearchDbUseCase {
       }))
     }
 
-    console.log(`${callName} - output`, output)
+    logger(`${callName} - output`, output)
     return output
   }
 }

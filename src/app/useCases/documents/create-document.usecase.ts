@@ -4,6 +4,7 @@ import { QdrantClient } from "../../../infra/clients/qdrant.client";
 import { CreateCollectionUseCase } from "../collections/create-collection.usecase";
 import { ServerError } from "@/app/errors/server.error";
 import { randomUUID } from "crypto";
+import { logger } from "@/utils/logger";
 
 interface ICreateDocumentData {
   userId: string;
@@ -22,8 +23,9 @@ export class CreateDocumentUseCase {
 
   async execute(data: ICreateDocumentData, traceId?: string): Promise<string> {
     const callName = `${this.constructor.name}-${this.execute.name}`
-    console.log(`${callName} - input`, data)
+    logger(`${callName} - input`)
 
+    console.time(`time-${traceId}-(find-col-or-create)`)
     let collection = await this.dbClient.findCollection(data.collectionName, data.userId)
     if (!collection) {
       try {
@@ -40,10 +42,12 @@ export class CreateDocumentUseCase {
         }
       }
     }
+    console.timeEnd(`time-${traceId}-(find-col-or-create)`)
 
     console.time(`time-${traceId}-create-embedding-document`)
     const documentEmbeddingVector = await this.embeddingClient.createEmbedding(String(data.content))
     console.timeEnd(`time-${traceId}-create-embedding-document`)
+    
     console.time(`time-${traceId}-create-document-qdrant`)
     const documentId = await this.createDocument({
       collectionId: collection.id,
@@ -53,13 +57,16 @@ export class CreateDocumentUseCase {
     })
     console.timeEnd(`time-${traceId}-create-document-qdrant`)
 
+    console.time(`time-${traceId}-increment-document-on-db`)
+    await this.dbClient.incrementDocumentsOnCollection(collection.id)
+    console.timeEnd(`time-${traceId}-increment-document-on-db`)
     return documentId
   }
 
 
   async createDocument(data: { collectionId: string, content: string, metadata?: Record<string, any>, vector: number[] }) {
     const callName = `${this.constructor.name}-${this.createDocument.name}`
-    console.log(`${callName} - input`, data)
+    logger(`${callName} - input`)
     const documentId = randomUUID()
     
     await this.qdrantClient.createDocument(data.collectionId, {

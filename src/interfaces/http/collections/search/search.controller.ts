@@ -4,6 +4,7 @@ import { SearchDocumentsUseCase } from "@/app/useCases/search/search-documents.u
 import { IRequest } from "types";
 import { SearchDbUseCase } from "@/app/useCases/search-db/search-db.usecase";
 import { AppError } from "@/app/errors/app.error";
+import { logger } from "@/utils/logger";
 
 export class SearchController {
   constructor(
@@ -14,8 +15,8 @@ export class SearchController {
 
   async searchDocuments(req: IRequest, res: Response, next: NextFunction) {
     try {
-      console.log('timing search documents')
-      console.time('time-searchDocumentsTotal')
+      logger('timing search documents')
+      console.time(`time-${req.traceId}-searchDocuments-totalTime`)
       const query = this.schema.searchDocuments.query.parse(req.query);
       const body = this.schema.searchDocuments.body.parse(req.body);
       const documents = await this.searchDocumentsUseCase.execute({
@@ -25,8 +26,18 @@ export class SearchController {
       }, {
         limit: query.limit,
         filters: body.filters
-      });
-      console.timeEnd('time-searchDocumentsTotal')
+      },
+        req.traceId
+      );
+      console.timeEnd(`time-${req.traceId}-searchDocuments-totalTime`)
+      req.endTime = Date.now()
+      if (query.return_time) {
+        const totalTime = req.startTime ? (req.endTime - req.startTime) : null
+        return res.status(200).json({
+          ...documents,
+          totalTime
+        })
+      }
       return res.status(200).json(documents)
     } catch (err) {
       next(err);
@@ -36,7 +47,7 @@ export class SearchController {
   async searchDocumentsDb(req: IRequest, res: Response, next: NextFunction) {
     // internal route
     try {
-      console.log('timing search documents direct on db')
+      logger('timing search documents direct on db')
       console.time('time-searchDocuments-directOnDB')
       const query = this.schema.searchDocuments.query.parse(req.query);
       const body = this.schema.searchDocuments.body.parse(req.body);

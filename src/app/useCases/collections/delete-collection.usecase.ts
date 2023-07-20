@@ -2,6 +2,7 @@ import { AppError } from "@/app/errors/app.error";
 import { DbClient, IDbCollection } from "../../../infra/clients/db.client";
 import { QdrantClient } from "../../../infra/clients/qdrant.client";
 import { ServerError } from "../../errors/server.error";
+import { logger } from "@/utils/logger";
 
 interface IDeleteCollectionData {
   userId: string;
@@ -19,7 +20,7 @@ export class DeleteCollectionUseCase {
 
   async deleteCollectionTransaction(collection: IDbCollection) {
     const callName = `${this.constructor.name}-${this.deleteCollectionTransaction.name}`
-    console.log(`${callName} - input`, collection)
+    logger(`${callName} - input`, collection)
 
     await this.dbClient.deleteCollection(collection.id)
     try {
@@ -27,13 +28,13 @@ export class DeleteCollectionUseCase {
     } catch (err) {
       console.error(`${callName} - error while deleting, reverting operation`, err)
       await this.dbClient.createCollection(collection)
-      console.log(`${callName} - collection created, operation reverted`)
+      logger(`${callName} - collection created, operation reverted`)
 
       throw new ServerError(`error while creating collection`, 500)
     }
     const output = collection
     
-    console.log(`${callName} - output`, output)
+    logger(`${callName} - output`, output)
     return output
   }
 }

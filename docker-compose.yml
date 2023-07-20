@@ -11,7 +11,7 @@ services:
     env_file: .env
     environment:
       - QDRANT_API_URL=$QDRANT_API_URL
-      - LIBSQL_DB_URL=$LIBSQL_DB_URL
-      - LIBSQL_DB_AUTH_TOKEN=$LIBSQL_DB_AUTH_TOKEN
+      - DATABASE_URL=$DATABASE_URL
+
     ports:
       - "3000:3000"

@@ -3,6 +3,7 @@ import { environment } from '../../config/environment';
 import { AppError } from '@/app/errors/app.error';
 import { ServerError } from '@/app/errors/server.error';
 import { Server } from 'http';
+import { logger } from '@/utils/logger';
 
 interface ICreateDocumentQdrant {
   id: string,
@@ -32,7 +33,7 @@ export class QdrantClient {
 
   async createCollection(collectionId: string) {
     const callName = `${this.constructor.name}-${this.createCollection.name}`
-    console.log(`${callName} - input`, { collectionId })
+    logger(`${callName} - input`, { collectionId })
 
     await this.client.createCollection(collectionId, {
       vectors: {
@@ -43,21 +44,21 @@ export class QdrantClient {
       on_disk_payload: true
     })
 
-    console.log(`${callName} - output`)
+    logger(`${callName} - output`)
   }
 
   async deleteCollection(collectionId: string) {
     const callName = `${this.constructor.name}-${this.deleteCollection.name}`
-    console.log(`${callName} - input`, { collectionId })
+    logger(`${callName} - input`, { collectionId })
 
     await this.client.deleteCollection(collectionId)
 
-    console.log(`${callName} - output`)
+    logger(`${callName} - output`)
   }
 
   async createDocument(collectionId: string, document: ICreateDocumentQdrant) {
     const callName = `${this.constructor.name}-${this.createDocument.name}`
-    console.log(`${callName} - input`, { collectionId, document })
+    logger(`${callName} - input`, { collectionId, document })
 
     await this.client.upsert(collectionId, {
       points: [
@@ -72,12 +73,12 @@ export class QdrantClient {
       ],
     })
 
-    console.log(`${callName} - output`)
+    logger(`${callName} - output`)
   }
 
   async deleteDocument(collectionId: string, documentId: string) {
     const callName = `${this.constructor.name}-${this.deleteDocument.name}`
-    console.log(`${callName} - input`, { collectionId, documentId })
+    logger(`${callName} - input`, { collectionId, documentId })
 
     await this.client.delete(
       collectionId,
@@ -90,7 +91,7 @@ export class QdrantClient {
       }
     )
 
-    console.log(`${callName} - output`)
+    logger(`${callName} - output`)
   }
 
   async listDocuments(collectionId: string, options: {
@@ -98,7 +99,7 @@ export class QdrantClient {
     offset: number
   }) {
     const callName = `${this.constructor.name}-${this.listDocuments.name}`
-    console.log(`${callName} - input`, {
+    logger(`${callName} - input`, {
       collectionId,
       options
     })
@@ -114,13 +115,13 @@ export class QdrantClient {
       metadata: point.payload.metadata
     }))
 
-    console.log(`${callName} - output`, output)
+    logger(`${callName} - output`, output)
     return output
   }
 
   async getDocument(collectionId: string, documentId: string) {
     const callName = `${this.constructor.name}-${this.getDocument.name}`
-    console.log(`${callName} - input`, {
+    logger(`${callName} - input`, {
       collectionId,
       documentId
     })
@@ -130,7 +131,7 @@ export class QdrantClient {
       with_payload: true,
     })
     if (!data[0]) {
-      console.log(`${callName} - output`)
+      logger(`${callName} - output`)
       return
     }
 
@@ -139,7 +140,7 @@ export class QdrantClient {
       content: data[0].payload?.content,
       metadata: data[0].payload?.metadata
     }
-    console.log(`${callName} - output`, output)
+    logger(`${callName} - output`, output)
     return output
   }
 
@@ -149,7 +150,7 @@ export class QdrantClient {
     filter?: IFilterMemora
   }) {
     const callName = `${this.constructor.name}-${this.searchDocuments.name}`
-    console.log(`${callName} - input`, {
+    logger(`${callName} - input`, {
       collectionId,
       vector,
       options
@@ -168,14 +169,14 @@ export class QdrantClient {
       score: item.score
     }))
 
-    console.log(`${callName} - output`, output)
+    logger(`${callName} - output`, output)
     return output
   }
 }
 
 
 type RangeOperators = '>' | '>=' | '<' | '<='
-type OtherOperators = '=' | '!=' | 'in'
+type OtherOperators = '=' | '!=' | 'in' | 'contains'
 interface IFilterComponent {
   key: string,
   op: RangeOperators | OtherOperators,
@@ -207,7 +208,7 @@ function convertQuery(data: IFilterMemora): IFilter | null {
     output.should = should
   }
 
-  console.log('output filters', output)
+  logger('output filters', output)
 
   return output
 }
@@ -239,6 +240,13 @@ function handleFilterItem(item: IFilterComponent): IFilterCondition {
     return filterComponent
   }
 
+  if (item.op === 'contains') {
+    filterComponent.match = {
+      value: item.value
+    }
+    return filterComponent
+  }
+
   if (item.op === '=') {
     filterComponent.match = {
       value: item.value
@@ -261,5 +269,5 @@ function handleFilterItem(item: IFilterComponent): IFilterCondition {
     return filterComponent
   }
   
-  throw new AppError('method not implemented', 500)
+  throw new AppError('method not implemented')
 }

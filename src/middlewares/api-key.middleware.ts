@@ -1,5 +1,4 @@
 import { DbClient } from "@/infra/clients/db.client";
-import { randomUUID } from "crypto";
 import { NextFunction, Response } from "express";
 import { IRequest } from "types";
 
@@ -10,8 +9,8 @@ export function apiKeyMiddleware(req: IRequest, _res: Response, next: NextFuncti
     req.userId = req.headers['x-api-key'] as string
   } else if (req.headers['x-api-token']) {
     // decode token to get user id
+    
     req.userId = 'token'
   }
-  req.traceId = randomUUID()
   next()
 }

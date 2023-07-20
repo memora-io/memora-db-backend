@@ -1,6 +1,7 @@
 import { AppError } from "@/app/errors/app.error";
 import { DbClient } from "../../../infra/clients/db.client";
 import { QdrantClient } from "../../../infra/clients/qdrant.client";
+import { logger } from "@/utils/logger";
 
 interface IListDocumentsData {
   userId: string;
@@ -17,7 +18,7 @@ export class ListDocumentsUseCase {
 
   async execute(data: IListDocumentsData, options: IListDocumentsOptions) {
     const callName = `${this.constructor.name}-${this.execute.name}`
-    console.log(`${callName} - input`, data)
+    logger(`${callName} - input`)
 
     const collection = await this.dbClient.findCollection(data.collectionName, data.userId)
     if(!collection) throw new AppError('collection does not exists', 404);

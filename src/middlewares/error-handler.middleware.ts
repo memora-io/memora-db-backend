@@ -2,16 +2,17 @@ import { NextFunction, Request, Response } from "express";
 import { AppError } from "../app/errors/app.error";
 import { ServerError } from "../app/errors/server.error";
 import { ZodError } from "zod";
+import { logger } from "@/utils/logger";
 
 type IError = ServerError | AppError | Error
 export function errorHandlerMiddleware(err: IError, _req: Request, res: Response, _next: NextFunction) {
 
   if (err instanceof AppError) {
     let myError = {
-      custom: 'app-error',
+      custom: 'error-00',
       ...err,
     }
-    console.log(myError)
+    logger('error', myError)
     return res.status(err.statusCode).json({
       message: err.message
     })
@@ -33,7 +34,7 @@ export function errorHandlerMiddleware(err: IError, _req: Request, res: Response
     })
   }
   let myError = {
-    custom: 'error-01',
+    custom: 'error-02',
     ...err,
   }
   console.error(myError)
