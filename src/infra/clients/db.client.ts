@@ -102,30 +102,24 @@ export class DbClient {
   async incrementDocumentsOnCollection(collection_id: string): Promise<void> {
     const callName = `${this.constructor.name}-${this.incrementDocumentsOnCollection.name}`
     logger(`${callName} - input`, { collection_id })
-    await this.client.collections.update({
-      where: {
-        id: collection_id
-      },
-      data: {
-        total_docs: {
-          increment: 1
-        }
-      }
-    })
+    const query = `
+    UPDATE memora.collections 
+    SET total_docs = total_docs + 1
+    WHERE 
+    id = '${collection_id}'
+    `
+    await this.client.$queryRawUnsafe(query)
   }
 
   async decrementDocumentsOnCollection(collection_id: string): Promise<void> {
     const callName = `${this.constructor.name}-${this.decrementDocumentsOnCollection.name}`
     logger(`${callName} - input`, { collection_id })
-    await this.client.collections.update({
-      where: {
-        id: collection_id
-      },
-      data: {
-        total_docs: {
-          decrement: 1
-        }
-      }
-    })
+    const query = `
+    UPDATE memora.collections 
+    SET total_docs = total_docs - 1
+    WHERE 
+    id = '${collection_id}'
+    `
+    await this.client.$queryRawUnsafe(query)
   }
 }
