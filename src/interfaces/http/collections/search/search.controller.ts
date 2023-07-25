@@ -49,8 +49,8 @@ export class SearchController {
     try {
       logger('timing search documents direct on db')
       console.time('time-searchDocuments-directOnDB')
-      const query = this.schema.searchDocuments.query.parse(req.query);
-      const body = this.schema.searchDocuments.body.parse(req.body);
+      const query = this.schema.searchDocumentsDB.query.parse(req.query);
+      const body = this.schema.searchDocumentsDB.body.parse(req.body);
       if (req.userId !== 'memora') throw new AppError('Forbidden', 403)
       const documents = await this.searchDbUseCase.execute({
         collectionName: req.pathParams?.collection_name as string,
