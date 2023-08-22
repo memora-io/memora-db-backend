@@ -5,6 +5,7 @@ import { IRequest } from "types";
 import { SearchDbUseCase } from "@/app/useCases/search-db/search-db.usecase";
 import { AppError } from "@/app/errors/app.error";
 import { logger } from "@/utils/logger";
+import mixpanel from "mixpanel";
 
 export class SearchController {
   constructor(
@@ -19,6 +20,13 @@ export class SearchController {
       console.time(`time-${req.traceId}-searchDocuments-totalTime`)
       const query = this.schema.searchDocuments.query.parse(req.query);
       const body = this.schema.searchDocuments.body.parse(req.body);
+      console.time(`time-${req.traceId}-searchDocuments-mixpaneltracking`)
+      mixpanel.track('Searched for documents', {
+        distinct_id: req.userId,
+        query: body.query,
+        collection_name: req.pathParams?.collection_name
+      })
+      console.timeEnd(`time-${req.traceId}-searchDocuments-mixpaneltracking`)
       const documents = await this.searchDocumentsUseCase.execute({
         collectionName: req.pathParams?.collection_name as string,
         userId: req.userId as string,

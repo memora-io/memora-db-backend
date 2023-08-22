@@ -4,6 +4,7 @@ import { getStripe } from '@/utils/get-stripe';
 import { logger } from '@/utils/logger';
 import { AppError } from '@/app/errors/app.error';
 import { randomUUID } from 'crypto';
+import mixpanel from '@/utils/mixpanel';
 
 export class StripeHookUseCase {
   constructor(
@@ -34,15 +35,18 @@ export class StripeHookUseCase {
     const customer_id = object.customer
     logger(`METADATA -`, object.metadata)
 
+    let user_id
+
     switch (event.type) {
       case 'customer.subscription.updated':
       case 'customer.subscription.deleted':
       case 'customer.subscription.created':
         // todo retrieve user based in customer (DB)
-        await this.changeSubscriptionByStatus(object.status, customer_id)
+        user_id = object.metadata?.user_id
+        await this.changeSubscriptionByStatus(object.status, customer_id, user_id)
         break;
       case 'checkout.session.completed':
-        const user_id = object.metadata?.user_id
+        user_id = object.metadata?.user_id
         await this.linkUserIdWithCustomer(user_id, customer_id)
 
         break
@@ -51,7 +55,7 @@ export class StripeHookUseCase {
     }
   }
 
-  private async changeSubscriptionByStatus(status: string, customer_id: string) {
+  private async changeSubscriptionByStatus(status: string, customer_id: string, user_id: string) {
     const subscription = await this.dbClient.client.users_subscriptions.findFirst({
       where: {
         stripe_customer_id: customer_id
@@ -72,6 +76,9 @@ export class StripeHookUseCase {
       })
     } else if (status === 'cancelled') {
       // TODO update clerk using api
+      mixpanel.track('Pro plan cancelled', {
+        distinct_id: user_id,
+      })
       this.dbClient.client.users_subscriptions.update({
         data: {
           plan: 'pro',
@@ -98,6 +105,10 @@ export class StripeHookUseCase {
         plan: 'pro',
         status: 'created',
       }
+    })
+
+    mixpanel.track('Pro plan purchased', {
+      distinct_id: user_id,
     })
     // todo: link user to customer in clerk via api
     // clerkClient.users.updateUserMetadata(user_id, {

@@ -5,6 +5,7 @@ import { IRequest } from "types";
 import { CreateDocumentUseCase } from "@/app/useCases/documents/create-document.usecase";
 import { DeleteDocumentUseCase } from "@/app/useCases/documents/delete-document.usecase";
 import { GetDocumentUseCase } from "@/app/useCases/documents/get-document.usecase";
+import mixpanel from "mixpanel";
 
 export class DocumentsController {
   constructor(
@@ -18,6 +19,12 @@ export class DocumentsController {
   async createDocument(req: IRequest, res: Response, next: NextFunction) {
     try {
       console.time(`time-${req.traceId}-createDocument-totalTime`)
+      console.time(`time-${req.traceId}-createDocument-mixpaneltracking`)
+      mixpanel.track('Added a document', {
+        distinct_id: req.userId,
+        collection_name: req.pathParams?.collection_name
+      })
+      console.timeEnd(`time-${req.traceId}-createDocument-mixpaneltracking`)
       const body = this.schema.createDocument.body.parse(req.body);
       const documentId = await this.createDocumentUseCase.execute({
         collectionName: req.pathParams?.collection_name as string,
