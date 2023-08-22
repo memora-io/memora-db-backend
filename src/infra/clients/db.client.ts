@@ -10,7 +10,7 @@ export interface IDbCollection {
 }
 
 export class DbClient {
-  private client: PrismaClient;
+  client: PrismaClient;
   constructor() {
     this.client = prisma
   }

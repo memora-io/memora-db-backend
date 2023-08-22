@@ -15,6 +15,27 @@ model api_keys {
   created_at DateTime? @default(now()) @db.DateTime(0)
 }
 
+model users_subscriptions {
+  id                 String    @id @db.VarChar(255)
+  user_id            String?   @db.VarChar(255)
+  stripe_customer_id String?   @db.VarChar(255)
+  plan               String?   @default("pro") @db.VarChar(255)
+  status             String?   @db.VarChar(255)
+  cancellation_date  String?   @db.VarChar(255)
+  created_at         DateTime? @default(now()) @db.DateTime(0)
+  updated_at         DateTime? @default(now()) @db.DateTime(0)
+}
+
+model queries {
+  id            String    @id @db.VarChar(255)
+  user_id       String?   @db.VarChar(255)
+  query         String?   @db.VarChar(255)
+  collection_id String?   @db.VarChar(255)
+  filtering     Json?
+  response      Json?
+  created_at    DateTime? @default(now()) @db.DateTime(0)
+}
+
 model collections {
   id         String    @id @db.VarChar(255)
   owner_id   String    @db.VarChar(255)
