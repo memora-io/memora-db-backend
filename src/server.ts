@@ -4,6 +4,7 @@ dotenv.config()
 import { app } from "./interfaces/http/app";
 import { logger } from "./utils/logger";
 
-app.listen(3000, () => {
-  logger(`listening on port: 3000`)
+const PORT = 3003
+app.listen(PORT, () => {
+  logger(`listening on port: ${PORT}`)
 })

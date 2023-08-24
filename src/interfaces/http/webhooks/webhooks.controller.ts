@@ -9,9 +9,9 @@ export class WebhooksController {
 
   async stripeHook(req: IRequest, res: Response, next: NextFunction) {
     try {
-      const body = req.body
+      const rawBody = req.body
       const signature = req.headers['stripe-signature'] as string
-      await this.stripeHookUseCase.execute(body, signature);
+      await this.stripeHookUseCase.execute(rawBody, signature);
       return res.status(200).send();
     }
     catch (err) {

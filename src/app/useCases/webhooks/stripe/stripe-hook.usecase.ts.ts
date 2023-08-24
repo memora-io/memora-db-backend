@@ -5,24 +5,18 @@ import { logger } from '@/utils/logger';
 import { AppError } from '@/app/errors/app.error';
 import { randomUUID } from 'crypto';
 import mixpanel from '@/utils/mixpanel';
+import { ServerError } from '@/app/errors/server.error';
 
 export class StripeHookUseCase {
   constructor(
     private dbClient: DbClient,
   ) { }
 
-  async execute(data: any, signature: string) {
-    const callName = `${this.constructor.name}-${this.execute.name}`;
-    logger(`${callName} - input`, {
-      data,
-      signature
-    });
+  async execute(rawBody: any, signature: string) {
     if (!signature) throw new AppError('signature not found', 400)
+    const hookId = randomUUID()
     const stripe = getStripe()
     const stripeEndpointSecret = 'whsec_a509efed8276858e48e61aceb2dd9d0c672aa6f851cc7767a0042cc3864eb341'
-    const buf = await this.buffer(data)
-    const rawBody = buf.toString('utf8');
-
     const event = await stripe.webhooks.constructEventAsync(
       rawBody,
       signature,
@@ -30,102 +24,61 @@ export class StripeHookUseCase {
       undefined
     );
 
-    logger(`${event.type}`)
+    logger(`${hookId} - EVENT TYPE - ${event.type}`)
     const object = event.data.object as any
-    const customer_id = object.customer
-    logger(`METADATA -`, object.metadata)
-
-    let user_id
-
+    const customerId = object.customer
+    const metadataHasProps = Object.keys(object.metadata).length
+    if (metadataHasProps) logger(`${hookId} - METADATA -`, object.metadata)
+    let userId = object.metadata?.user_id
     switch (event.type) {
+      case 'checkout.session.completed':
+        logger(`${hookId} - checkout completed, wait subscription hook`)
+        if (!userId) throw new ServerError('userId must be provided for this to be handled')
+        mixpanel.track('Pro plan purchased', {
+          distinct_id: userId,
+        })
+        break
+      case 'customer.subscription.created':
+        logger(`${hookId} - subscription created on stripe`)
       case 'customer.subscription.updated':
       case 'customer.subscription.deleted':
-      case 'customer.subscription.created':
-        // todo retrieve user based in customer (DB)
-        user_id = object.metadata?.user_id
-        await this.changeSubscriptionByStatus(object.status, customer_id, user_id)
+        if (!userId) {
+          // if not receives user id in metadata, tries to get by customer id in our database
+          const user = await this.dbClient.client.users.findFirst({
+            where: {
+              stripe_customer_id: customerId
+            }
+          })
+          // if not found by customer id throws an error
+          if (!user) throw new ServerError('userId must be provided for this event')
+          userId = user?.id
+        }
+
+        await this.changeUserPlan(userId, customerId, object.status, hookId)
         break;
-      case 'checkout.session.completed':
-        user_id = object.metadata?.user_id
-        await this.linkUserIdWithCustomer(user_id, customer_id)
-
-        break
       default:
-        logger(`Unhandled event type ${event.type}`);
+        logger(`${hookId} - Unhandled event type ${event.type}`);
     }
   }
 
-  private async changeSubscriptionByStatus(status: string, customer_id: string, user_id: string) {
-    const subscription = await this.dbClient.client.users_subscriptions.findFirst({
-      where: {
-        stripe_customer_id: customer_id
-      }
-    })
-    logger('subscription status', status)
-    if (!subscription) throw new Error('user not found for this customer_id')
-    if(status === 'active') {
-      // TODO update clerk using api
-      this.dbClient.client.users_subscriptions.update({
-        data: {
-          plan: 'pro',
-          status: 'active'
-        },
-        where: {
-          id: subscription.id
-        }
-      })
-    } else if (status === 'cancelled') {
-      // TODO update clerk using api
-      mixpanel.track('Pro plan cancelled', {
-        distinct_id: user_id,
-      })
-      this.dbClient.client.users_subscriptions.update({
-        data: {
-          plan: 'pro',
-          status: 'cancelled'
-        },
-        where: {
-          id: subscription.id
-        }
-      })
+  private async changeUserPlan(userId: string, customerId: string, status: string, hookId: string) {
+    logger(`${hookId} - subscription status`, status)
+    if (!['active', 'canceled'].includes(status)) {
+      logger(`${hookId} - this subscription status (${status}) does not change plan`)
+      return
     }
-  }
 
-  private async linkUserIdWithCustomer(user_id: string, customer_id: string) {
-    // here we match the user_id with the customer_id
-    logger(`${this.linkUserIdWithCustomer.name}`, {
-      user_id,
-      customer_id
-    })
-    await this.dbClient.client.users_subscriptions.create({
+    let plan = status === 'active' ? 'pro' : 'hobby'
+    await this.dbClient.client.users.update({
       data: {
-        id: randomUUID(),
-        user_id: user_id,
-        stripe_customer_id: customer_id,
-        plan: 'pro',
-        status: 'created',
+        plan,
+        updated_at: new Date(),
+        stripe_customer_id: customerId
+      },
+      where: {
+        id: userId
       }
     })
-
-    mixpanel.track('Pro plan purchased', {
-      distinct_id: user_id,
-    })
-    // todo: link user to customer in clerk via api
-    // clerkClient.users.updateUserMetadata(user_id, {
-    //   publicMetadata: {
-    //     plan: 'pro',
-    //     customer_id: customer_id,
-    //   }
-    // })
-  }
-
-  private async buffer(readable: Readable) {
-    const chunks = [];
-    for await (const chunk of readable) {
-      chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
-    }
-    return Buffer.concat(chunks);
+    logger(`${hookId} - changed user plan to ${plan}`)
   }
 }
-
-
