@@ -6,6 +6,7 @@ import { AppError } from '@/app/errors/app.error';
 import { randomUUID } from 'crypto';
 import mixpanel from '@/utils/mixpanel';
 import { ServerError } from '@/app/errors/server.error';
+import clerkClient from '@clerk/clerk-sdk-node';
 
 export class StripeHookUseCase {
   constructor(
@@ -78,6 +79,14 @@ export class StripeHookUseCase {
       where: {
         id: userId
       }
+    })
+    const clerkUser = await clerkClient.users.getUser(userId)
+    await clerkClient.users.updateUserMetadata(userId, {
+      publicMetadata: {
+        ...clerkUser.publicMetadata,
+        plan,
+        stripe_customer_id: customerId
+      },
     })
     logger(`${hookId} - changed user plan to ${plan}`)
   }
