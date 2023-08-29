@@ -5,7 +5,8 @@ import { logInformationMiddleware } from "@/middlewares/log-information.middlewa
 import { webhooksRoutes } from "./webhooks/webhooks.routes";
 
 const router = Router();
-router.use('/health-check', (_req, res) => {
+router.use('/health-check', (req, res) => {
+  console.log(`/health-check - ip: ${req.socket.remoteAddress}`)
   res.send('OK')
 })
 router.use('/webhooks', webhooksRoutes)
