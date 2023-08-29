@@ -15,6 +15,8 @@ RUN npm run build
 
 FROM --platform=linux/amd64 node:18-alpine
 
+WORKDIR /app
+
 COPY --from=builder /usr/memora/node_modules ./node_modules
 COPY --from=builder /usr/memora/package*.json ./
 COPY --from=builder /usr/memora/dist ./dist
