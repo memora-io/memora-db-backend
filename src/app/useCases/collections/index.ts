@@ -5,7 +5,6 @@ import { DeleteCollectionUseCase } from "./delete-collection.usecase"
 import { ListCollectionsUseCase } from "./list-collections.usecase"
 import { GetCollectionUseCase } from "./get-collection.usecase"
 
-
 const qdrantClient = new QdrantClient()
 const dbClient = new DbClient()
 const createCollectionUseCase = new CreateCollectionUseCase(qdrantClient, dbClient)

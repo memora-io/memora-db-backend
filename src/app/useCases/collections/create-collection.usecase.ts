@@ -4,7 +4,6 @@ import { QdrantClient } from "@/infra/clients/qdrant.client";
 import { logger } from "@/utils/logger";
 import { randomUUID } from "crypto";
 
-
 interface ICreateCollectionData {
   userId: string;
   name: string;

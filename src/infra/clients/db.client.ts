@@ -1,7 +1,7 @@
 import { randomUUID } from 'crypto';
 import { PrismaClient } from '@prisma/client';
 import { logger } from '@/utils/logger';
-import prisma from '../db/prisma';
+import prisma from '@/infra/db/prisma';
 
 export interface IDbCollection {
   id: string;

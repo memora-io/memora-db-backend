@@ -1,4 +1,3 @@
-import { Readable } from 'stream';
 import { DbClient } from '@/infra/clients/db.client';
 import { getStripe } from '@/utils/get-stripe';
 import { logger } from '@/utils/logger';

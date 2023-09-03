@@ -1,8 +1,6 @@
 import { QdrantClient as QdrantClientFromLib, Schemas } from '@qdrant/js-client-rest';
-import { environment } from '../../config/environment';
+import { environment } from '@/config/environment';
 import { AppError } from '@/app/errors/app.error';
-import { ServerError } from '@/app/errors/server.error';
-import { Server } from 'http';
 import { logger } from '@/utils/logger';
 
 interface ICreateDocumentQdrant {
