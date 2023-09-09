@@ -6,6 +6,7 @@ import { randomUUID } from 'crypto';
 import mixpanel from '@/utils/mixpanel';
 import { ServerError } from '@/app/errors/server.error';
 import clerkClient from '@clerk/clerk-sdk-node';
+import { environment } from '@/config/environment';
 
 export class StripeHookUseCase {
   constructor(
@@ -16,7 +17,7 @@ export class StripeHookUseCase {
     if (!signature) throw new AppError('signature not found', 400)
     const hookId = randomUUID()
     const stripe = getStripe()
-    const stripeEndpointSecret = 'whsec_a509efed8276858e48e61aceb2dd9d0c672aa6f851cc7767a0042cc3864eb341'
+    const stripeEndpointSecret = environment.STRIPE_ENDPOINT_KEY;
     const event = await stripe.webhooks.constructEventAsync(
       rawBody,
       signature,

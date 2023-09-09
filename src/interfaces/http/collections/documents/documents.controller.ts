@@ -5,7 +5,7 @@ import { IRequest } from "types";
 import { CreateDocumentUseCase } from "@/app/useCases/documents/create-document.usecase";
 import { DeleteDocumentUseCase } from "@/app/useCases/documents/delete-document.usecase";
 import { GetDocumentUseCase } from "@/app/useCases/documents/get-document.usecase";
-import mixpanel from "mixpanel";
+import mixpanel from "@/utils/mixpanel";
 
 export class DocumentsController {
   constructor(

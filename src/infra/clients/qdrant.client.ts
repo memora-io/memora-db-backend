@@ -56,7 +56,7 @@ export class QdrantClient {
 
   async createDocument(collectionId: string, document: ICreateDocumentQdrant) {
     const callName = `${this.constructor.name}-${this.createDocument.name}`
-    logger(`${callName} - input`, { collectionId, document })
+    logger(`${callName} - input`, { collectionId, document_id: document.id })
 
     await this.client.upsert(collectionId, {
       points: [

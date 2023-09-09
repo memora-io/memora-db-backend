@@ -5,7 +5,7 @@ import { IRequest } from "types";
 import { SearchDbUseCase } from "@/app/useCases/search-db/search-db.usecase";
 import { AppError } from "@/app/errors/app.error";
 import { logger } from "@/utils/logger";
-import mixpanel from "mixpanel";
+import mixpanel from "@/utils/mixpanel";
 
 export class SearchController {
   constructor(

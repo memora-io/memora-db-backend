@@ -1,3 +1,4 @@
+import { environment } from "@/config/environment";
 import { logger } from "@/utils/logger";
 import axios, { Axios } from "axios";
 
@@ -24,7 +25,7 @@ export class RerankingClient {
   async rerank(query: string, documents: IRerankingDocuments[], options: IRerankingOptions): Promise<IRerankingResponse[]> {
     const callName = `${this.constructor.name}-${this.rerank.name}`
     logger(`${callName} - input`, { query, documents, options })
-    const RERANKING_URL = 'http://35.155.247.97:3010/predict'
+    const RERANKING_URL = environment.RERANKER_URL
     const rerankingResponse = await this.client.post(RERANKING_URL, {
       query: query,
       files: documents.map(document => ({
