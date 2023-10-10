@@ -17,7 +17,7 @@ collectionsRoutes.use('/:collection_name', pathParamMiddleware(collectionsSchema
 collectionsRoutes.delete('/:collection_name', (req, res, next) => collectionsController.deleteCollection(req, res, next));
 collectionsRoutes.get('/:collection_name', (req, res, next) => collectionsController.getCollection(req, res, next));
 collectionsRoutes.use('/:collection_name/documents', documentsRoutes)
-collectionsRoutes.use('/:collection_name', searchRoutes)
+collectionsRoutes.use('/:collection_name/search', searchRoutes)
 collectionsRoutes.post('/', (req, res, next) => collectionsController.createCollection(req, res, next));
 collectionsRoutes.get('/', (req, res, next) => collectionsController.listCollections(req, res, next));
 

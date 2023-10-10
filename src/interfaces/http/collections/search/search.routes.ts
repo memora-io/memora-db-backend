@@ -13,7 +13,7 @@ const searchController = new SearchController(
 )
 const searchRoutes = Router();
 
-searchRoutes.post('/search', (req, res, next) => searchController.searchDocuments(req, res, next))
-searchRoutes.post('/search-db', (req, res, next) => searchController.searchDocumentsDb(req, res, next))
+searchRoutes.post('/db', (req, res, next) => searchController.searchDocumentsDb(req, res, next))
+searchRoutes.post('/', (req, res, next) => searchController.searchDocuments(req, res, next))
 
 export { searchRoutes }
