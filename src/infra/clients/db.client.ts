@@ -122,4 +122,23 @@ export class DbClient {
     `
     await this.client.$queryRawUnsafe(query)
   }
+
+  async insertOnQueries(data: {
+    collection_id: string,
+    query: string,
+    filtering: string,
+    user_id: string,
+    response: string
+  }): Promise<void> {
+    await this.client.queries.create({
+      data: {
+        id: randomUUID(),
+        collection_id: data.collection_id,
+        query: data.query,
+        response: data.response,
+        user_id: data.user_id,
+        filtering: data.filtering,
+      }
+    })
+  }
 }

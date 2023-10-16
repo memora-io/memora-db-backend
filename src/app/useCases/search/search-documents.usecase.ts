@@ -48,7 +48,6 @@ export class SearchDocumentsUseCase {
     console.timeEnd(`time-${traceId}-getCollectionTurso`)
 
     await this.kvClient.sumQueriesMade(collection.owner_id)
-    // TODO insert on queries table
 
     console.time(`time-${traceId}-generateEmbedding`)
     const queryVector = await this.embeddingClient.createEmbedding(String(data.query));
@@ -75,7 +74,7 @@ export class SearchDocumentsUseCase {
     const response: ISearchDocumentsResponse = {
       documents: refinedResponse.map(doc => {
         const qdrantDoc = topQdrantDocuments.find(qdoc => qdoc.id === doc.id)
-        if(!qdrantDoc) throw new ServerError('Error on documents rerank')
+        if (!qdrantDoc) throw new ServerError('Error on documents rerank')
         return {
           id: doc.id,
           content: qdrantDoc.content,
@@ -84,7 +83,37 @@ export class SearchDocumentsUseCase {
       })
     }
 
+    const responseForDb = response.documents.map(item => ({
+      id: item.id
+    }))
+    this.insertOnQueries({
+      userId: data.userId,
+      collectionId: collection.id,
+      filtering: options.filters,
+      query: data.query,
+      response: JSON.stringify(responseForDb)
+    }, traceId)
+
     return response
+  }
+
+  async insertOnQueries(data: {
+    userId: string,
+    collectionId: string,
+    filtering: string,
+    query: string,
+    response: string,
+  }, traceId: string|undefined) {
+    console.time(`time-${traceId}-insertOnQueries`)
+
+    await this.dbClient.insertOnQueries({
+      user_id: data.userId,
+      collection_id: data.collectionId,
+      filtering: data.filtering,
+      query: data.query,
+      response: data.response
+    })
+    console.timeEnd(`time-${traceId}-insertOnQueries`)
   }
 
   async canSearchDocument(userId: string) {
