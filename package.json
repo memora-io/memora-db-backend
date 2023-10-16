@@ -26,6 +26,7 @@
     "@clerk/clerk-sdk-node": "^4.12.2",
     "@prisma/client": "^5.2.0",
     "@qdrant/js-client-rest": "^1.2.2",
+    "@vercel/kv": "^0.2.3",
     "axios": "^1.4.0",
     "cors": "^2.8.5",
     "dayjs": "^1.11.9",

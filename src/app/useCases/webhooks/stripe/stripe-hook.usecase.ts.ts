@@ -7,10 +7,12 @@ import mixpanel from '@/utils/mixpanel';
 import { ServerError } from '@/app/errors/server.error';
 import clerkClient from '@clerk/clerk-sdk-node';
 import { environment } from '@/config/environment';
+import { KVClient } from '@/infra/clients/kv.client';
 
 export class StripeHookUseCase {
   constructor(
     private dbClient: DbClient,
+    private kvClient: KVClient
   ) { }
 
   async execute(rawBody: any, signature: string) {
@@ -80,6 +82,7 @@ export class StripeHookUseCase {
         id: userId
       }
     })
+    await this.kvClient.setUserPlan(userId, plan)
     const clerkUser = await clerkClient.users.getUser(userId)
     await clerkClient.users.updateUserMetadata(userId, {
       publicMetadata: {

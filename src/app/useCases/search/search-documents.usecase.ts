@@ -5,6 +5,7 @@ import { ServerError } from "@/app/errors/server.error";
 import { DbClient } from "@/infra/clients/db.client";
 import { QdrantClient } from "@/infra/clients/qdrant.client";
 import { logger } from "@/utils/logger";
+import { KVClient } from "@/infra/clients/kv.client";
 
 interface ISearchDocumentsData {
   userId: string;
@@ -31,6 +32,7 @@ export class SearchDocumentsUseCase {
     private dbClient: DbClient,
     private embeddingClient: EmbeddingClient,
     private rerankingClient: RerankingClient,
+    private kvClient: KVClient
   ) { }
 
   async execute(data: ISearchDocumentsData, options: ISearchDocumentsOptions, traceId?: string) {
@@ -38,11 +40,15 @@ export class SearchDocumentsUseCase {
 
     const callName = `${this.constructor.name}-${this.execute.name}`;
     logger(`${callName} - input`, data);
+    await this.canSearchDocument(data.userId)
 
     console.time(`time-${traceId}-getCollectionTurso`)
     const collection = await this.dbClient.findCollection(data.collectionName, data.userId);
     if (!collection) throw new AppError('collection does not exists', 404);
     console.timeEnd(`time-${traceId}-getCollectionTurso`)
+
+    await this.kvClient.sumQueriesMade(collection.owner_id)
+    // TODO insert on queries table
 
     console.time(`time-${traceId}-generateEmbedding`)
     const queryVector = await this.embeddingClient.createEmbedding(String(data.query));
@@ -79,5 +85,15 @@ export class SearchDocumentsUseCase {
     }
 
     return response
+  }
+
+  async canSearchDocument(userId: string) {
+    const LIMIT_HOBBY = 1000
+    const LIMIT_PRO = 1000000
+    const userPlan = await this.kvClient.getUserPlan(userId)
+    const limit = userPlan === 'pro' ? LIMIT_PRO : LIMIT_HOBBY
+    const queries = await this.kvClient.getQueriesMade(userId)
+    if (queries < limit) return
+    throw new AppError('max queries exceeded for this period')
   }
 }

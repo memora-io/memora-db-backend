@@ -3,6 +3,7 @@ import { DbClient, IDbCollection } from "../../../infra/clients/db.client";
 import { QdrantClient } from "../../../infra/clients/qdrant.client";
 import { ServerError } from "../../errors/server.error";
 import { logger } from "@/utils/logger";
+import { KVClient } from "@/infra/clients/kv.client";
 
 interface IDeleteCollectionData {
   userId: string;
@@ -10,7 +11,7 @@ interface IDeleteCollectionData {
 }
 
 export class DeleteCollectionUseCase {
-  constructor(private qdrantClient: QdrantClient, private dbClient: DbClient) {}
+  constructor(private qdrantClient: QdrantClient, private dbClient: DbClient, private kvClient: KVClient) {}
 
   async execute(data: IDeleteCollectionData) {
     const collection = await this.dbClient.findCollection(data.name, data.userId)
@@ -33,7 +34,8 @@ export class DeleteCollectionUseCase {
       throw new ServerError(`error while creating collection`, 500)
     }
     const output = collection
-    
+
+    await this.kvClient.subCollections(collection.owner_id)
     logger(`${callName} - output`, output)
     return output
   }
