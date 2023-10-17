@@ -36,6 +36,7 @@ export class DeleteCollectionUseCase {
     const output = collection
 
     await this.kvClient.subCollections(collection.owner_id)
+    await this.kvClient.subTotalDocuments(collection.owner_id, collection.total_docs ?? 0)
     logger(`${callName} - output`, output)
     return output
   }

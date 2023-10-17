@@ -56,9 +56,9 @@ export class KVClient {
     await kv.incr(key)
   }
 
-  async subTotalDocuments(userId: string) {
+  async subTotalDocuments(userId: string, qty = 1) {
     const key = `${userId}|totalDocuments`
-    await kv.decr(key)
+    await kv.decrby(key, qty)
   }
 
   async getTotalDocuments(userId: string) {

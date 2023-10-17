@@ -7,6 +7,7 @@ export interface IDbCollection {
   id: string;
   owner_id: string;
   collection_name: string;
+  total_docs?: number | null;
 }
 
 export class DbClient {
@@ -15,7 +16,7 @@ export class DbClient {
     this.client = prisma
   }
 
-  async createCollection(collectionData: IDbCollection): Promise<IDbCollection> {
+  async createCollection(collectionData: Omit<IDbCollection, 'total_docs'>): Promise<IDbCollection> {
     const callName = `${this.constructor.name}-${this.createCollection.name}`
     logger(`${callName} - input`, collectionData)
 
@@ -31,7 +32,8 @@ export class DbClient {
     const output = {
       id: collectionData.id,
       collection_name: collectionData.collection_name,
-      owner_id: collectionData.owner_id
+      owner_id: collectionData.owner_id,
+      total_docs: 0
     }
     logger(`${callName} - output`, output)
     return output
@@ -51,7 +53,6 @@ export class DbClient {
   async findCollection(collectionName: string, ownerId: string): Promise<IDbCollection | null> {
     const callName = `${this.constructor.name}-${this.findCollection.name}`
     logger(`${callName} - input`, { collectionName, ownerId })
-    const reqId = randomUUID();
 
     const collection = await this.client.collections.findFirst({
       where: {
@@ -66,7 +67,8 @@ export class DbClient {
     const output = {
       id: collection.id,
       collection_name: collection.name,
-      owner_id: collection.owner_id
+      owner_id: collection.owner_id,
+      total_docs: collection.total_docs
     }
 
     logger(`${callName} - output`, output)
@@ -87,11 +89,12 @@ export class DbClient {
       logger(`${callName} - output`, null)
       return null
     }
-    const output = collections.map(collection =>
+    const output: IDbCollection[] = collections.map(collection =>
     ({
       id: collection.id,
       collection_name: collection.name,
-      owner_id: collection.owner_id
+      owner_id: collection.owner_id,
+      total_docs: collection.total_docs
     })
     )
 
