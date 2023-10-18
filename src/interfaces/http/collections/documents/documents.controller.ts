@@ -6,6 +6,7 @@ import { CreateDocumentUseCase } from "@/app/useCases/documents/create-document.
 import { DeleteDocumentUseCase } from "@/app/useCases/documents/delete-document.usecase";
 import { GetDocumentUseCase } from "@/app/useCases/documents/get-document.usecase";
 import mixpanel from "@/utils/mixpanel";
+import { UpdateDocumentUseCase } from "@/app/useCases/documents/update-document.usecase";
 
 export class DocumentsController {
   constructor(
@@ -14,6 +15,7 @@ export class DocumentsController {
     private deleteDocumentUseCase: DeleteDocumentUseCase,
     private listDocumentsUseCase: ListDocumentsUseCase,
     private getDocumentUseCase: GetDocumentUseCase,
+    private updateDocumentUseCase: UpdateDocumentUseCase,
   ) { }
 
   async createDocument(req: IRequest, res: Response, next: NextFunction) {
@@ -47,6 +49,23 @@ export class DocumentsController {
         userId: req.userId as string
       });
       return res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async updateDocument(req: IRequest, res: Response, next: NextFunction) {
+    try {
+      console.timeEnd(`time-${req.traceId}-updateDocument-totalTime`)
+      const body = this.schema.updateDocument.body.parse(req.body);
+      await this.updateDocumentUseCase.execute({
+        collectionName: req.pathParams?.collection_name as string,
+        id: req.pathParams?.document_id as string,
+        userId: req.userId as string,
+        metadata: body.metadata
+      });
+      console.timeEnd(`time-${req.traceId}-updateDocument-totalTime`)
+      return res.status(204).send()
     } catch (err) {
       next(err);
     }

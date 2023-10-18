@@ -10,6 +10,13 @@ interface ICreateDocumentQdrant {
   content: string;
 }
 
+interface IUpdateDocumentQdrant {
+  id: string,
+  metadata?: Record<string, any>;
+  // vector: number[];
+  // content: string;
+}
+
 interface IPoint {
   id: string,
   payload: {
@@ -72,6 +79,29 @@ export class QdrantClient {
     })
 
     logger(`${callName} - output`)
+  }
+
+  async updateDocument(collectionId: string, document: IUpdateDocumentQdrant) {
+    const callName = `${this.constructor.name}-${this.updateDocument.name}`
+    logger(`${callName} - input`, { collectionId, document_id: document.id })
+
+
+    const data = await this.client.retrieve(collectionId, {
+      ids: [document.id],
+      with_payload: true,
+    })
+    if (!data[0]) {
+      logger(`${callName} - output: document not found`)
+      throw new AppError('Document does not exists')
+    }
+    const dbDocument = data[0]
+    await this.client.overwritePayload(collectionId, {
+      points: [document.id],
+      payload: {
+        content: dbDocument.payload?.content,
+        metadata: document.metadata
+      }
+    })
   }
 
   async deleteDocument(collectionId: string, documentId: string) {

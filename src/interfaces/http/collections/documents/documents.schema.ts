@@ -8,6 +8,12 @@ export class DocumentsSchema {
     })
   }
 
+  updateDocument = {
+    body: z.object({
+      metadata: z.object({}).nonstrict().required(),
+    })
+  }
+
   listDocuments = {
     query: z.object({
       limit: z.coerce.number().default(100),
