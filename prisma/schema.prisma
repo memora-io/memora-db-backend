@@ -4,7 +4,7 @@ generator client {
 }
 
 datasource db {
-  provider     = "mysql"
+  provider     = "postgresql"
   url          = env("DATABASE_URL")
   relationMode = "prisma"
 }
@@ -12,7 +12,7 @@ datasource db {
 model api_keys {
   user_id    String    @db.VarChar(255)
   api_key    String    @id @db.VarChar(255)
-  created_at DateTime? @default(now()) @db.DateTime(0)
+  created_at DateTime? @default(now())
 }
 
 model queries {
@@ -22,7 +22,7 @@ model queries {
   collection_id String?   @db.VarChar(255)
   filtering     Json?
   response      Json?
-  created_at    DateTime? @default(now()) @db.DateTime(0)
+  created_at    DateTime? @default(now())
 }
 
 model collections {
@@ -30,7 +30,7 @@ model collections {
   owner_id   String    @db.VarChar(255)
   name       String    @db.VarChar(255)
   total_docs Int?      @default(0)
-  created_at DateTime? @default(now()) @db.DateTime(0)
+  created_at DateTime? @default(now())
 
   @@unique([owner_id, name], map: "owner_id__name")
 }
@@ -39,19 +39,17 @@ model users {
   id                 String   @id @db.VarChar(255)
   plan               String   @default("hobby") @db.VarChar(255)
   stripe_customer_id String?  @db.VarChar(255)
-  created_at         DateTime @default(now()) @db.Timestamp(0)
-  updated_at         DateTime @default(now()) @db.Timestamp(0)
+  created_at         DateTime @default(now())
+  updated_at         DateTime @default(now())
 }
 
-model vt_HOLD_3f71cfbaa25156f2bf26dd3c17afaf48_20230825053300 {
+model users_subscriptions {
   id                 String    @id @db.VarChar(255)
   user_id            String?   @db.VarChar(255)
   stripe_customer_id String?   @db.VarChar(255)
   plan               String?   @default("pro") @db.VarChar(255)
   status             String?   @db.VarChar(255)
   cancellation_date  String?   @db.VarChar(255)
-  created_at         DateTime? @default(now()) @db.DateTime(0)
-  updated_at         DateTime? @default(now()) @db.DateTime(0)
-
-  @@map("_vt_HOLD_3f71cfbaa25156f2bf26dd3c17afaf48_20230825053300")
+  created_at         DateTime? @default(now())
+  updated_at         DateTime? @default(now())
 }
