@@ -106,7 +106,7 @@ export class DbClient {
     const callName = `${this.constructor.name}-${this.incrementDocumentsOnCollection.name}`
     logger(`${callName} - input`, { collection_id })
     const query = `
-    UPDATE memora.collections 
+    UPDATE public.collections 
     SET total_docs = total_docs + 1
     WHERE 
     id = '${collection_id}'
@@ -118,7 +118,7 @@ export class DbClient {
     const callName = `${this.constructor.name}-${this.decrementDocumentsOnCollection.name}`
     logger(`${callName} - input`, { collection_id })
     const query = `
-    UPDATE memora.collections 
+    UPDATE public.collections 
     SET total_docs = total_docs - 1
     WHERE 
     id = '${collection_id}'
